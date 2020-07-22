@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from .models import *
 import bcrypt
 
@@ -14,7 +15,8 @@ def register(request):
 
     errors = User.objects.register_validate(request.POST)
     if len(errors) > 0:
-        # CREATE THE ERROR MESSAGES
+        for key, val in errors.items():
+            messages.error(request, val)
         return redirect("/")
     # CREATING A USER
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -30,4 +32,8 @@ def login(request):
         if bcrypt.checkpw(request.POST['password'].encode(), logged_user.password.encode()):
             request.session['user_id'] = logged_user.id
             return redirect("/homepage")
+        else:
+            messages.error(request, "Invalid Credentials")
+    else:
+        messages.error(request, "Email does not exist")
     return redirect("/")
